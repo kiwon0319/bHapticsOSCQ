@@ -10,5 +10,5 @@ VRC OSC Bridge to bHaptics Player
 * Run both `bHaptics Player` and `bHaptics OSCQ`
 
 ### References
-* [tack-python](https://github.com/kiwon0319/bHapticsOSCQ)
+* [tack-python](https://github.com/bhaptics/tact-python)
 * [tinyoscquery](https://github.com/cyberkitsune/tinyoscquery)
