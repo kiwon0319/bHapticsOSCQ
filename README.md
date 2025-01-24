@@ -16,10 +16,10 @@ VRC OSC Bridge to bHaptics Player
 
 ### Support Devices
 * TackSuit
-* TackVisor
-* TackSleeve
-* Tacktosy for Feet
-* Tacktosy for Hands
+* TackVisor (V1.2.0 ~)
+* TackSleeve (V1.2.0 ~)
+* Tacktosy for Feet (V1.2.0 ~)
+* Tacktosy for Hands (V1.2.0 ~)
 
 ### License
 [![GitHub License](https://img.shields.io/github/license/kiwon0319/bhapticsOSCQ)](https://github.com/kiwon0319/bHapticsOSCQ/blob/master/LICENSE)
