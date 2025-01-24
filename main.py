@@ -6,12 +6,11 @@ import errno
 import socket
 import time
 import psutil
-from bhaptics import better_haptic_player as player
-from bhaptics.better_haptic_player import BhapticsPosition
-
-
 import requests
+
 from enum import Enum
+from bhaptics import better_haptic_player as player
+from bhaptics.better_haptic_player import BhapticsPosition, connected_positions
 from pythonosc import udp_client, osc_server, dispatcher
 from tinyoscquery.query import OSCQueryBrowser, OSCQueryClient
 from tinyoscquery.queryservice import OSCQueryService, OSCAccess
@@ -262,38 +261,96 @@ class Receiver:
         """
         (STATIC) This works with dispatcher.
 
-        send feedback to front-side of vest when receive contact
+        send feedback receive contact
         :param _addr: VRC parameter address
         :param _args: VRC parameter value
         :return: NONE
         """
 
-        # print(Flag.Debug.value + "{}: {} \033".format(_addr, _args))
-
-
-
         if "bHapticsOSC_Vest_Back"in _addr:
             num = re.findall(r'\d', _addr)
             idx = int("".join(num)) - 1
+
             if _args[0]:
-                print(Flag.Info.value + "Back idx:{} Value:{} \033".format(idx, _args[0]))
-                back[idx] = {"index": idx, "intensity": 100}
-                # player.submit_dot("backFrame", BhapticsPosition.VestBack.value,[{"index": int(_addr[-1]),"intensity": 100}], 10000)
+                bHaptics_back[idx] = {"index": idx, "intensity": 100}
             else:
-                print(Flag.Info.value + "Back idx:{} Value:{} \033".format(idx, _args[0]))
-                back[idx] = {"index": idx, "intensity": 0}
-                # player.submit_dot("backFrame", BhapticsPosition.VestBack.value,[{"index": int(_addr[-1]), "intensity": 100}], 10000)
+                bHaptics_back[idx] = {"index": idx, "intensity": 0}
+            print(Flag.Info.value + "Position: VestBack idx: {} Value: {} \033".format(idx, _args[0]))
         elif "bHapticsOSC_Vest_Front" in _addr:
             num = re.findall(r'\d', _addr)
             idx = int("".join(num)) - 1
-            if _args[0]:
-                print(Flag.Info.value + "Front idx:{} Value:{} \033".format(idx, _args[0]))
-                front[idx] = {"index": idx, "intensity": 100}
-                # player.submit_dot("frontFrame", BhapticsPosition.VestFront.value,[{"index": int(_addr[-1]),"intensity": 100}], 100)
-            else:
-                print(Flag.Info.value + "Front idx:{} Value:{} \033".format(idx, _args[0]))
-                front[idx] = {"index": idx, "intensity": 0}
+            idx = (3 - idx % 4) + (idx // 4 * 4)
 
+            if _args[0]:
+                bHaptics_front[idx] = {"index": idx, "intensity": 100}
+            else:
+                bHaptics_front[idx] = {"index": idx, "intensity": 0}
+            print(Flag.Info.value + "Position: VestFront idx: {} Value: {} \033".format(idx, _args[0]))
+        elif "bHapticsOSC_Head" in _addr:
+            num = re.findall(r'\d', _addr)
+            idx = int("".join(num)) - 1
+            idx = 5 - idx
+
+            if _args[0]:
+                bHaptics_head[idx] = {"index": idx, "intensity": 100}
+            else:
+                bHaptics_head[idx] = {"index": idx, "intensity": 0}
+            print(Flag.Info.value + "Position: Head idx: {} Value: {} \033".format(idx, _args[0]))
+        elif "bHapticsOSC_Arm_Left" in _addr:
+            num = re.findall(r'\d', _addr)
+            idx = int("".join(num)) - 1
+
+            if _args[0]:
+                bHaptics_foreArm_L[idx] = {"index": idx, "intensity": 100}
+            else:
+                bHaptics_foreArm_L[idx] = {"index": idx, "intensity": 0}
+            print(Flag.Info.value + "Position: ForearmL idx: {} Value: {} \033".format(idx, _args[0]))
+        elif "bHapticsOSC_Arm_Right" in _addr:
+            num = re.findall(r'\d', _addr)
+            idx = int("".join(num)) - 1
+
+            if _args[0]:
+                bHaptics_foreArm_R[idx] = {"index": idx, "intensity": 100}
+            else:
+                bHaptics_foreArm_R[idx] = {"index": idx, "intensity": 0}
+            print(Flag.Info.value + "Position: ForearmR idx: {} Value: {} \033".format(idx, _args[0]))
+        elif "bHapticsOSC_Hand_Left" in _addr:
+            num = re.findall(r'\d', _addr)
+            idx = int("".join(num)) - 1
+
+            if _args[0]:
+                bHaptics_hand_L[idx] = {"index": idx, "intensity": 100}
+            else:
+                bHaptics_hand_L[idx] = {"index": idx, "intensity": 0}
+            print(Flag.Info.value + "Position: HandL idx: {} Value: {} \033".format(idx, _args[0]))
+        elif "bHapticsOSC_Hand_Right" in _addr:
+            num = re.findall(r'\d', _addr)
+            idx = int("".join(num)) - 1
+
+            if _args[0]:
+                bHaptics_hand_R[idx] = {"index": idx, "intensity": 100}
+            else:
+                bHaptics_hand_R[idx] = {"index": idx, "intensity": 0}
+            print(Flag.Info.value + "Position: HandR idx: {} Value: {} \033".format(idx, _args[0]))
+        elif "bHapticsOSC_Foot_Left" in _addr:
+            num = re.findall(r'\d', _addr)
+            idx = int("".join(num)) - 1
+
+            if _args[0]:
+                bHaptics_foot_L[idx] = {"index": idx, "intensity": 100}
+            else:
+                bHaptics_foot_L[idx] = {"index": idx, "intensity": 0}
+            print(Flag.Info.value + "Position: FootL idx: {} Value: {} \033".format(idx, _args[0]))
+        elif "bHapticsOSC_Foot_Right" in _addr:
+            num = re.findall(r'\d', _addr)
+            idx = int("".join(num)) - 1
+            idx = 2 - idx
+
+            if _args[0]:
+                bHaptics_foot_R[idx] = {"index": idx, "intensity": 100}
+            else:
+                bHaptics_foot_R[idx] = {"index": idx, "intensity": 0}
+            print(Flag.Info.value + "Position: HandR idx: {} Value: {} \033".format(idx, _args[0]))
 
     @staticmethod
     def build_dispatcher():
@@ -366,11 +423,18 @@ class Sender:
 
 
 async def loop(PRINT_INFO = True):
-    print(Flag.Info.value + "START SENDING OSC")
+    print(Flag.Info.value + "START SENDING")
 
     while(True):
-        player.submit_dot("backFrame",BhapticsPosition.VestBack.value,back,100)
-        player.submit_dot("frontFrame", BhapticsPosition.VestFront.value,front, 100)
+        player.submit_dot("backFrame",BhapticsPosition.VestBack.value,bHaptics_back,100)
+        player.submit_dot("frontFrame", BhapticsPosition.VestFront.value,bHaptics_front, 100)
+        player.submit_dot("headFrame", BhapticsPosition.Head.value,bHaptics_head, 100)
+        player.submit_dot("forearmLFrame", BhapticsPosition.ForearmL.value, bHaptics_foreArm_L, 100)
+        player.submit_dot("forearmRFrame", BhapticsPosition.ForearmR.value, bHaptics_foreArm_R, 100)
+        player.submit_dot("handLFrame", BhapticsPosition.HandL.value, bHaptics_foreArm_R, 100)
+        player.submit_dot("handRFrame", BhapticsPosition.HandR.value, bHaptics_foreArm_R, 100)
+        player.submit_dot("footLFrame", BhapticsPosition.FootL.value, bHaptics_foreArm_R, 100)
+        player.submit_dot("footRFrame", BhapticsPosition.FootR.value, bHaptics_foreArm_R, 100)
         await asyncio.sleep(0.1)
 
 async def main():
@@ -391,8 +455,17 @@ if __name__ == '__main__':
 
     player.initialize()
 
-    front = [{"index": i, "intensity": 0} for i in range(20)]
-    back = [{"index": i, "intensity": 0} for i in range(20)]
+    bHaptics_front = [{"index": i, "intensity": 0} for i in range(20)]
+    bHaptics_back = [{"index": i, "intensity": 0} for i in range(20)]
+    bHaptics_head = [{"index": i, "intensity": 0} for i in range(6)]
+    bHaptics_foreArm_L = [{"index": i, "intensity": 0} for i in range(6)]
+    bHaptics_foreArm_R = [{"index": i, "intensity": 0} for i in range(6)]
+    bHaptics_hand_L = [{"index": i, "intensity": 0} for i in range(3)]
+    bHaptics_hand_R = [{"index": i, "intensity": 0} for i in range(3)]
+    bHaptics_foot_L = [{"index": i, "intensity": 0} for i in range(3)]
+    bHaptics_foot_R = [{"index": i, "intensity": 0} for i in range(3)]
+    bHaptics_glove_L=[]
+    bHaptics_glove_R=[]
 
     try:
         asyncio.run(main())
