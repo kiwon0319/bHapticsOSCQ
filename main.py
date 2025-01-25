@@ -351,6 +351,24 @@ class Receiver:
             else:
                 bHaptics_foot_R[idx] = {"index": idx, "intensity": 0}
             print(Flag.Info.value + "Position: HandR idx: {} Value: {} \033".format(idx, _args[0]))
+        elif "bHapticsOSC_GloveL" in _addr:
+            num = re.findall(r'\d', _addr)
+            idx = int("".join(num)) - 1
+
+            if _args[0]:
+                bHaptics_glove_L[idx] = {"index": idx, "intensity": 100}
+            else:
+                bHaptics_glove_L[idx] = {"index": idx, "intensity": 0}
+            print(Flag.Info.value + "Position: GloveR idx: {} Value: {} \033".format(idx, _args[0]))
+        elif "bHapticsOSC_GloveR" in _addr:
+            num = re.findall(r'\d', _addr)
+            idx = int("".join(num)) - 1
+
+            if _args[0]:
+                bHaptics_glove_R[idx] = {"index": idx, "intensity": 100}
+            else:
+                bHaptics_glove_R[idx] = {"index": idx, "intensity": 0}
+            print(Flag.Info.value + "Position: GloveR idx: {} Value: {} \033".format(idx, _args[0]))
 
     @staticmethod
     def build_dispatcher():
@@ -431,10 +449,12 @@ async def loop(PRINT_INFO = True):
         player.submit_dot("headFrame", BhapticsPosition.Head.value,bHaptics_head, 100)
         player.submit_dot("forearmLFrame", BhapticsPosition.ForearmL.value, bHaptics_foreArm_L, 100)
         player.submit_dot("forearmRFrame", BhapticsPosition.ForearmR.value, bHaptics_foreArm_R, 100)
-        player.submit_dot("handLFrame", BhapticsPosition.HandL.value, bHaptics_foreArm_R, 100)
-        player.submit_dot("handRFrame", BhapticsPosition.HandR.value, bHaptics_foreArm_R, 100)
-        player.submit_dot("footLFrame", BhapticsPosition.FootL.value, bHaptics_foreArm_R, 100)
-        player.submit_dot("footRFrame", BhapticsPosition.FootR.value, bHaptics_foreArm_R, 100)
+        player.submit_dot("handLFrame", BhapticsPosition.HandL.value, bHaptics_hand_L, 100)
+        player.submit_dot("handRFrame", BhapticsPosition.HandR.value, bHaptics_hand_R, 100)
+        player.submit_dot("footLFrame", BhapticsPosition.FootL.value, bHaptics_foot_L, 100)
+        player.submit_dot("footRFrame", BhapticsPosition.FootR.value, bHaptics_foot_R, 100)
+        player.submit_dot("gloveLFrame", BhapticsPosition.GloveL.value, bHaptics_glove_L, 100)
+        player.submit_dot("gloveRFrame", BhapticsPosition.GloveR.value, bHaptics_glove_R, 100)
         await asyncio.sleep(0.1)
 
 async def main():
@@ -464,8 +484,8 @@ if __name__ == '__main__':
     bHaptics_hand_R = [{"index": i, "intensity": 0} for i in range(3)]
     bHaptics_foot_L = [{"index": i, "intensity": 0} for i in range(3)]
     bHaptics_foot_R = [{"index": i, "intensity": 0} for i in range(3)]
-    bHaptics_glove_L=[]
-    bHaptics_glove_R=[]
+    bHaptics_glove_L=[{"index": i, "intensity": 0} for i in range(6)]
+    bHaptics_glove_R=[{"index": i, "intensity": 0} for i in range(6)]
 
     try:
         asyncio.run(main())
