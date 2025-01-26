@@ -15,11 +15,12 @@ VRC OSC Bridge to bHaptics Player
 * Run both `bHaptics Player` and `bHaptics OSCQ`
 
 ### Support Devices
-* TackSuit
-* TackVisor (V1.2.0 ~)
-* TackSleeve (V1.2.0 ~)
-* Tacktosy for Feet (V1.2.0 ~)
-* Tacktosy for Hands (V1.2.0 ~)
+* TactSuit
+* TactVisor (V1.2.0 ~)
+* TactSleeve (V1.2.0 ~)
+* Tactosy for Feet (V1.2.5 ~)
+* Tactosy for Hands (V1.2.5 ~)
+* Tact Gloves (V1.2.5~)
 
 ### License
 [![GitHub License](https://img.shields.io/github/license/kiwon0319/bhapticsOSCQ)](https://github.com/kiwon0319/bHapticsOSCQ/blob/master/LICENSE)
