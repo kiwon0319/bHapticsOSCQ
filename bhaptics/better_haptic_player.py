@@ -50,10 +50,10 @@ def thread_function(name):
             ws.recv_frame()
 
 
-def initialize():
+def initialize(appId: str, appName: str):
     global ws
     try:
-        ws = create_connection("ws://localhost:15881/v2/feedbacks",
+        ws = create_connection("ws://localhost:15881/v2/feedbacks?app_id={0}&app_name={1}&app=1.2.5".format(appId,appName),
                                sockopt=((socket.IPPROTO_TCP, socket.TCP_NODELAY, 1),),
                                class_=WebSocketReceiver)
 

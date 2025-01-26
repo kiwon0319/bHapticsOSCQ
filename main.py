@@ -470,10 +470,12 @@ async def main():
 # Press the green button in the gutter to run the script.
 
 if __name__ == '__main__':
+    app_id = "per.guideung.bHapticsOSCQ"
+    app_name = "bHapticsOSCQ"
     oscq = OSCQuery()
     config = Config()
 
-    player.initialize()
+    player.initialize(app_id,app_name)
 
     bHaptics_front = [{"index": i, "intensity": 0} for i in range(20)]
     bHaptics_back = [{"index": i, "intensity": 0} for i in range(20)]
