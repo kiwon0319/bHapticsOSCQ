@@ -51,7 +51,7 @@ class OSCQuery:
         # find free tcp port and set http_port
         self.__get_free_tcp_port()
 
-        self.oscQueryService = OSCQueryService("OSC Parameter Increaser", self.http_port, self.osc_port)
+        self.oscQueryService = OSCQueryService("bHapticsOSCq", self.http_port, self.osc_port)
         self.oscQueryService.advertise_endpoint("/avatar/parameters/MuteSelf", False, OSCAccess.WRITEONLY_VALUE)
 
         self.browser = OSCQueryBrowser()
@@ -288,6 +288,22 @@ class Receiver:
             print(Flag.Info.value + "Position: VestFront idx: {} Value: {} \033".format(idx, _args[0]))
 
     @staticmethod
+    def v1_vest_handler(_addr, *_args):
+        num = re.findall(r'\d', _addr)
+        idx = int("".join(num))
+        intensity = 0
+
+        if _args[0] > 0.3:
+            intensity = _args[0] * 100
+        elif _args[0] <= 0.3:
+            intensity = 0
+
+        if "bHapticsOSC_Vest_Back"in _addr:
+            bHaptics_back[idx] = {"index": idx, "intensity": intensity}
+        elif "bHapticsOSC_Vest_Front" in _addr:
+            bHaptics_front[idx] = {"index": idx, "intensity": intensity}
+
+    @staticmethod
     def head_handler(_addr, *_args):
         """
             (STATIC) This works with dispatcher.
@@ -306,6 +322,19 @@ class Receiver:
         else:
             bHaptics_head[idx] = {"index": idx, "intensity": 0}
         print(Flag.Info.value + "Position: Head idx: {} Value: {} \033".format(idx, _args[0]))
+
+    @staticmethod
+    def v1_head_handler(_addr, *_args):
+        num = re.findall(r'\d', _addr)
+        idx = int("".join(num))
+        intensity = 0
+
+        if _args[0] > 0.3:
+            intensity = _args[0] * 100
+        elif _args[0] <= 0.3:
+            intensity = 0
+
+        bHaptics_head[idx] = {"index": idx, "intensity": intensity}
 
     @staticmethod
     def arm_handler(_addr, *_args):
@@ -454,6 +483,11 @@ class Receiver:
         d.map("/avatar/parameters/bHapticsOSC_Foot*", Receiver.foot_handler)
         d.map("/avatar/parameters/bHapticsOSC_Glove*",Receiver.glove_handler)
         d.map("/avatar/parameters/bHapticsOSC_Vest*", Receiver.vest_handler)
+
+        # <V1 Parameters>
+        d.map("/avatar/parameters/bOSC_v1_Vest*", Receiver.v1_vest_handler)
+        d.map("/avatar/parameters/bOSC_v1_Head*", Receiver.v1_head_handler)
+        #</V1 Parameters>
 
         return d
 
