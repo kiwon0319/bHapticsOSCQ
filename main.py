@@ -51,7 +51,7 @@ class OSCQuery:
         # find free tcp port and set http_port
         self.__get_free_tcp_port()
 
-        self.oscQueryService = OSCQueryService("bHapticsOSCq", self.http_port, self.osc_port)
+        self.oscQueryService = OSCQueryService("bHapticsOSCQ", self.http_port, self.osc_port)
         self.oscQueryService.advertise_endpoint("/avatar/parameters/MuteSelf", False, OSCAccess.WRITEONLY_VALUE)
 
         self.browser = OSCQueryBrowser()
@@ -80,7 +80,7 @@ class OSCQuery:
 
             self.osc_port = port
 
-            print(Flag.Info.value + "getting UDP port has been completed")
+            print(Flag.Info.value + "getting OSC port has been completed")
 
     def __get_free_tcp_port(self):
         """
@@ -289,19 +289,19 @@ class Receiver:
 
     @staticmethod
     def v1_vest_handler(_addr, *_args):
-        num = re.findall(r'\d', _addr)
+        num = _addr.split("_")[-1]
         idx = int("".join(num))
         intensity = 0
 
-        if _args[0] > 0.3:
-            intensity = _args[0] * 100
-        elif _args[0] <= 0.3:
-            intensity = 0
+        if _args[0] != 0:
+            intensity = 100
 
-        if "bHapticsOSC_Vest_Back"in _addr:
+        if "v1_VestBack"in _addr:
             bHaptics_back[idx] = {"index": idx, "intensity": intensity}
-        elif "bHapticsOSC_Vest_Front" in _addr:
+            print(Flag.Info.value + "Position: VestBack idx: {} Value: {} \033".format(idx, _args[0]))
+        elif "v1_VestFront" in _addr:
             bHaptics_front[idx] = {"index": idx, "intensity": intensity}
+            print(Flag.Info.value + "Position: VestFront idx: {} Value: {} \033".format(idx, _args[0]))
 
     @staticmethod
     def head_handler(_addr, *_args):
@@ -325,16 +325,15 @@ class Receiver:
 
     @staticmethod
     def v1_head_handler(_addr, *_args):
-        num = re.findall(r'\d', _addr)
+        num = _addr.split("_")[-1]
         idx = int("".join(num))
         intensity = 0
 
-        if _args[0] > 0.3:
-            intensity = _args[0] * 100
-        elif _args[0] <= 0.3:
-            intensity = 0
+        if _args[0] != 0:
+            intensity = 100
 
         bHaptics_head[idx] = {"index": idx, "intensity": intensity}
+        print(Flag.Info.value + "Position: Head idx: {} Value: {} \033".format(idx, _args[0]))
 
     @staticmethod
     def arm_handler(_addr, *_args):
@@ -361,6 +360,22 @@ class Receiver:
             else:
                 bHaptics_foreArm_R[idx] = {"index": idx, "intensity": 0}
             print(Flag.Info.value + "Position: ForearmR idx: {} Value: {} \033".format(idx, _args[0]))
+
+    @staticmethod
+    def v1_arm_handler(_addr, *_args):
+        num = _addr.split("_")[-1]
+        idx = int("".join(num))
+        intensity = 0
+
+        if _args[0] != 0:
+            intensity = 100
+
+        if "v1_ForearemL" in _addr:
+            bHaptics_foreArm_L[idx] = {"index": idx, "intensity": intensity}
+            print(Flag.Info.value + "Position: ForearmL: {} Value: {} \033".format(idx, _args[0]))
+        elif "v1_ForearemR" in _addr:
+            bHaptics_foreArm_R[idx] = {"index": idx, "intensity": intensity}
+            print(Flag.Info.value + "Position: ForearmR: {} Value: {} \033".format(idx, _args[0]))
 
     @staticmethod
     def hand_handler(_addr, *_args):
@@ -487,6 +502,7 @@ class Receiver:
         # <V1 Parameters>
         d.map("/avatar/parameters/bOSC_v1_Vest*", Receiver.v1_vest_handler)
         d.map("/avatar/parameters/bOSC_v1_Head*", Receiver.v1_head_handler)
+        d.map("/avatar/parameters/bOSC_v1_Forearm*", Receiver.v1_arm_handler)
         #</V1 Parameters>
 
         return d
@@ -515,7 +531,6 @@ class Receiver:
         self.transport, self.protocol = await self.server.create_serve_endpoint()
 
         return self.transport
-
 
 class Sender:
     def __init__(self, _ip: str = "127.0.0.1", _port: int = 9000):
