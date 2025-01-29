@@ -248,7 +248,7 @@ class AvatarConfig:
         """
         get avatar information
 
-        return vlaue information: (id, name, parameters)
+        return value information: (id, name, parameters)
         :return: (Tuple) avatar config variables
         """
         result = (self.avatar_id, self.avatar_name, self.avatar_prmt)
@@ -275,7 +275,8 @@ class Receiver:
                 bHaptics_back[idx] = {"index": idx, "intensity": 100}
             else:
                 bHaptics_back[idx] = {"index": idx, "intensity": 0}
-            print(Flag.Info.value + "Position: VestBack idx: {} Value: {} \033".format(idx, _args[0]))
+            if show_log:
+                print(Flag.Info.value + "Position: VestBack idx: {} Value: {} \033".format(idx, _args[0]))
         elif "bHapticsOSC_Vest_Front" in _addr:
             num = re.findall(r'\d', _addr)
             idx = int("".join(num)) - 1
@@ -285,10 +286,19 @@ class Receiver:
                 bHaptics_front[idx] = {"index": idx, "intensity": 100}
             else:
                 bHaptics_front[idx] = {"index": idx, "intensity": 0}
-            print(Flag.Info.value + "Position: VestFront idx: {} Value: {} \033".format(idx, _args[0]))
+            if show_log:
+                print(Flag.Info.value + "Position: VestFront idx: {} Value: {} \033".format(idx, _args[0]))
 
     @staticmethod
     def v1_vest_handler(_addr, *_args):
+        """
+                    (STATIC)(Legacy) This works with dispatcher.
+
+                    send feedback to vest when receive contact
+                    :param _addr: VRC parameter address
+                    :param _args: VRC parameter value
+                    :return: NONE
+                """
         num = _addr.split("_")[-1]
         idx = int("".join(num))
         intensity = 0
@@ -298,10 +308,12 @@ class Receiver:
 
         if "v1_VestBack"in _addr:
             bHaptics_back[idx] = {"index": idx, "intensity": intensity}
-            print(Flag.Info.value + "Position: VestBack idx: {} Value: {} \033".format(idx, _args[0]))
+            if show_log:
+                print(Flag.Info.value + "Position: VestBack idx: {} Value: {} \033".format(idx, _args[0]))
         elif "v1_VestFront" in _addr:
             bHaptics_front[idx] = {"index": idx, "intensity": intensity}
-            print(Flag.Info.value + "Position: VestFront idx: {} Value: {} \033".format(idx, _args[0]))
+            if show_log:
+                print(Flag.Info.value + "Position: VestFront idx: {} Value: {} \033".format(idx, _args[0]))
 
     @staticmethod
     def head_handler(_addr, *_args):
@@ -321,10 +333,20 @@ class Receiver:
             bHaptics_head[idx] = {"index": idx, "intensity": 100}
         else:
             bHaptics_head[idx] = {"index": idx, "intensity": 0}
-        print(Flag.Info.value + "Position: Head idx: {} Value: {} \033".format(idx, _args[0]))
+
+        if show_log:
+            print(Flag.Info.value + "Position: Head idx: {} Value: {} \033".format(idx, _args[0]))
 
     @staticmethod
     def v1_head_handler(_addr, *_args):
+        """
+                    (STATIC) (Legacy) This works with dispatcher.
+
+                    send feedback to head when receive contact
+                    :param _addr: VRC parameter address
+                    :param _args: VRC parameter value
+                    :return: NONE
+                """
         num = _addr.split("_")[-1]
         idx = int("".join(num))
         intensity = 0
@@ -333,7 +355,9 @@ class Receiver:
             intensity = 100
 
         bHaptics_head[idx] = {"index": idx, "intensity": intensity}
-        print(Flag.Info.value + "Position: Head idx: {} Value: {} \033".format(idx, _args[0]))
+
+        if show_log:
+            print(Flag.Info.value + "Position: Head idx: {} Value: {} \033".format(idx, _args[0]))
 
     @staticmethod
     def arm_handler(_addr, *_args):
@@ -353,16 +377,26 @@ class Receiver:
                 bHaptics_foreArm_L[idx] = {"index": idx, "intensity": 100}
             else:
                 bHaptics_foreArm_L[idx] = {"index": idx, "intensity": 0}
-            print(Flag.Info.value + "Position: ForearmL idx: {} Value: {} \033".format(idx, _args[0]))
+            if show_log:
+                print(Flag.Info.value + "Position: ForearmL idx: {} Value: {} \033".format(idx, _args[0]))
         elif "bHapticsOSC_Arm_Right" in _addr:
             if _args[0]:
                 bHaptics_foreArm_R[idx] = {"index": idx, "intensity": 100}
             else:
                 bHaptics_foreArm_R[idx] = {"index": idx, "intensity": 0}
-            print(Flag.Info.value + "Position: ForearmR idx: {} Value: {} \033".format(idx, _args[0]))
+            if show_log:
+                print(Flag.Info.value + "Position: ForearmR idx: {} Value: {} \033".format(idx, _args[0]))
 
     @staticmethod
     def v1_arm_handler(_addr, *_args):
+        """
+            (STATIC) This works with dispatcher.
+
+            send feedback to arms when receive contact
+            :param _addr: VRC parameter address
+            :param _args: VRC parameter value
+            :return: NONE
+        """
         num = _addr.split("_")[-1]
         idx = int("".join(num))
         intensity = 0
@@ -372,10 +406,12 @@ class Receiver:
 
         if "v1_ForearemL" in _addr:
             bHaptics_foreArm_L[idx] = {"index": idx, "intensity": intensity}
-            print(Flag.Info.value + "Position: ForearmL: {} Value: {} \033".format(idx, _args[0]))
+            if show_log:
+                print(Flag.Info.value + "Position: ForearmL: {} Value: {} \033".format(idx, _args[0]))
         elif "v1_ForearemR" in _addr:
             bHaptics_foreArm_R[idx] = {"index": idx, "intensity": intensity}
-            print(Flag.Info.value + "Position: ForearmR: {} Value: {} \033".format(idx, _args[0]))
+            if show_log:
+                print(Flag.Info.value + "Position: ForearmR: {} Value: {} \033".format(idx, _args[0]))
 
     @staticmethod
     def hand_handler(_addr, *_args):
@@ -395,13 +431,15 @@ class Receiver:
                 bHaptics_hand_L[idx] = {"index": idx, "intensity": 100}
             else:
                 bHaptics_hand_L[idx] = {"index": idx, "intensity": 0}
-            print(Flag.Info.value + "Position: HandL idx: {} Value: {} \033".format(idx, _args[0]))
+            if show_log:
+                print(Flag.Info.value + "Position: HandL idx: {} Value: {} \033".format(idx, _args[0]))
         elif "bHapticsOSC_Hand_Right" in _addr:
             if _args[0]:
                 bHaptics_hand_R[idx] = {"index": idx, "intensity": 100}
             else:
                 bHaptics_hand_R[idx] = {"index": idx, "intensity": 0}
-            print(Flag.Info.value + "Position: HandR idx: {} Value: {} \033".format(idx, _args[0]))
+            if show_log:
+                print(Flag.Info.value + "Position: HandR idx: {} Value: {} \033".format(idx, _args[0]))
 
     @staticmethod
     def foot_handler(_addr, *_args):
@@ -421,7 +459,8 @@ class Receiver:
                 bHaptics_foot_L[idx] = {"index": idx, "intensity": 100}
             else:
                 bHaptics_foot_L[idx] = {"index": idx, "intensity": 0}
-            print(Flag.Info.value + "Position: FootL idx: {} Value: {} \033".format(idx, _args[0]))
+            if show_log:
+                print(Flag.Info.value + "Position: FootL idx: {} Value: {} \033".format(idx, _args[0]))
         elif "bHapticsOSC_Foot_Right" in _addr:
             idx = 2 - idx   # reverse index
 
@@ -429,7 +468,8 @@ class Receiver:
                 bHaptics_foot_R[idx] = {"index": idx, "intensity": 100}
             else:
                 bHaptics_foot_R[idx] = {"index": idx, "intensity": 0}
-            print(Flag.Info.value + "Position: HandR idx: {} Value: {} \033".format(idx, _args[0]))
+            if show_log:
+                print(Flag.Info.value + "Position: HandR idx: {} Value: {} \033".format(idx, _args[0]))
 
     @staticmethod
     def glove_handler(_addr, *_args):
@@ -449,16 +489,27 @@ class Receiver:
                 bHaptics_glove_L[idx] = {"index": idx, "intensity": 100}
             else:
                 bHaptics_glove_L[idx] = {"index": idx, "intensity": 0}
-            print(Flag.Info.value + "Position: GloveR idx: {} Value: {} \033".format(idx, _args[0]))
+            if show_log:
+                print(Flag.Info.value + "Position: GloveR idx: {} Value: {} \033".format(idx, _args[0]))
         elif "bHapticsOSC_GloveR" in _addr:
             if _args[0]:
                 bHaptics_glove_R[idx] = {"index": idx, "intensity": 100}
             else:
                 bHaptics_glove_R[idx] = {"index": idx, "intensity": 0}
-            print(Flag.Info.value + "Position: GloveR idx: {} Value: {} \033".format(idx, _args[0]))
+            if show_log:
+                print(Flag.Info.value + "Position: GloveR idx: {} Value: {} \033".format(idx, _args[0]))
 
     @staticmethod
     def reset_handler(_addr, *_args):
+        """
+            (STATIC) This works with dispatcher.
+
+            reset all position to zero
+            :param _addr: VRC parameter address
+            :param _args: VRC parameter value
+            :return: NONE
+        """
+
         if _args[0]:
             for obj in bHaptics_front:
                 obj["intensity"] = 0
@@ -532,6 +583,7 @@ class Receiver:
 
         return self.transport
 
+
 class Sender:
     def __init__(self, _ip: str = "127.0.0.1", _port: int = 9000):
         """
@@ -558,6 +610,7 @@ class Sender:
         :param ctx: context to send
         :param prmt: VRC parameter name
         :param path: (Optional) parameter path
+        :param PRINT_INFO (Optional) print info or not
         """
         full_path = path + prmt
         self.client.send_message(full_path, ctx)
@@ -592,14 +645,12 @@ async def main():
 
     transport.close()
 
-
-# Press the green button in the gutter to run the script.
-
 if __name__ == '__main__':
     app_id = "per.Guideung.bHapticsOSCQ"
     app_name = "bHapticsOSCQ"
     oscq = OSCQuery()
     config = Config()
+    show_log: bool = True
 
     player.initialize(app_id,app_name)
 
