@@ -21,6 +21,38 @@ class Flag(Enum):
     Warn = "\033[33m[Warning]\033[0m "
 
 
+class HapticsPlayer:
+
+    def __init__(self, _id, _name):
+
+        player.initialize(_id, _name)
+        self. positions = {key.value: list() for key in BhapticsPosition}
+
+        for key in self.positions.keys():
+            if key in ["VestBack", "VestFront"]:
+                self.positions[key] = [{"index": i, "intensity": 0} for i in range(20)]
+            elif key in ["Head", "ForearmL", "ForearmR", "GloveL", "GloveR"]:
+                self.positions[key] = [{"index": i, "intensity": 0} for i in range(6)]
+            elif key in ["HandL", "HandR", "FootL", "FootR"]:
+                self.positions[key] = [{"index": i, "intensity": 0} for i in range(3)]
+
+    def set(self, _position: BhapticsPosition, _index: int, _intensity) -> None:
+        if type(_intensity) is not int:
+            self.positions[_position.value][_index]["intensity"] = _intensity
+        if type(_intensity) is bool:
+            self.positions[_position.value][_index]["intensity"] = 100 if _intensity else 0
+
+    def reset(self):
+        for obj in self.positions.values():
+            for pos in obj:
+                pos["intensity"] = 0
+
+
+    def sumit_dot(self, _position: BhapticsPosition, _duration: int = 100):
+        pos = _position.value
+        player.submit_dot(pos, pos, self.positions[pos], _duration)
+
+
 class OSCQuery:
     @staticmethod
     def __check_process_is_running():
@@ -116,14 +148,21 @@ class OSCQuery:
         :return: (String) Avatar ID
         """
 
-        while True:
-            response = requests.get(f"http://127.0.0.1:{self.vrchat_client_port}/avatar/change")
+        try:
+            while True:
+                response = requests.get(f"http://127.0.0.1:{self.vrchat_client_port}/avatar/change", timeout=5)
 
-            if response.status_code == 200:
-                json_data = response.json()
-                return json_data['VALUE'][0]
+                if response.status_code == 200:
+                    json_data = response.json()
+                    return json_data['VALUE'][0]
 
-            time.sleep(1)
+                time.sleep(1)
+        except requests.exceptions.RequestException as e:
+            print(Flag.Warn.value + f"Error while fetching avatar: {e}")
+            return "Unknown"
+        except Exception as e:
+            print(Flag.Warn.value + f"Unexpected error: {e}")
+            return "Unknown"
 
     def get_avatar_prmt(self) -> dict:
         """
@@ -139,12 +178,11 @@ class OSCQuery:
 
 
 class Config:
-    CONFIG_VERSION = 1
+    CONFIG_VERSION = 2
 
     def __init__(self):
         # <NETWORK>
         self.ip_addr: str = "127.0.0.1"
-        self.bHaptics_port: int = 5005
         # </NETWORK>
 
         if self.load() == errno.ENOENT:
@@ -162,11 +200,17 @@ class Config:
                 raw = json.load(f)
 
                 self.ip_addr = raw["NETWORK"]["ip"]
-                self.bHaptics_port = raw["NETWORK"]["bHaptics_port"]
+
+                if self.CONFIG_VERSION != raw["CONFIG_VERSION"]:
+                    print(Flag.Info.value + "Config file version is not match. Now create new one. \033")
+                    self.save()
 
                 return 0
         except IOError as e:
             return e.errno
+        except KeyError:
+            print(Flag.Warn.value + "Config file is not correct format. Now create new one. \033")
+            self.save()
         except Exception as e:
             raise e
 
@@ -196,7 +240,6 @@ class Config:
 
         d_net = {
             "ip": self.ip_addr,
-            "bHaptics_port": self.bHaptics_port,
         }
 
         result = {
@@ -271,10 +314,8 @@ class Receiver:
             num = re.findall(r'\d', _addr)
             idx = int("".join(num)) - 1
 
-            if _args[0]:
-                bHaptics_back[idx] = {"index": idx, "intensity": 100}
-            else:
-                bHaptics_back[idx] = {"index": idx, "intensity": 0}
+            haptics_player.set(BhapticsPosition.VestBack, idx ,_args[0])
+
             if show_log:
                 print(Flag.Info.value + "Position: VestBack idx: {} Value: {} \033".format(idx, _args[0]))
         elif "bHapticsOSC_Vest_Front" in _addr:
@@ -282,10 +323,8 @@ class Receiver:
             idx = int("".join(num)) - 1
             idx = (3 - idx % 4) + (idx // 4 * 4)
 
-            if _args[0]:
-                bHaptics_front[idx] = {"index": idx, "intensity": 100}
-            else:
-                bHaptics_front[idx] = {"index": idx, "intensity": 0}
+            haptics_player.set(BhapticsPosition.VestFront, idx, _args[0])
+
             if show_log:
                 print(Flag.Info.value + "Position: VestFront idx: {} Value: {} \033".format(idx, _args[0]))
 
@@ -307,11 +346,11 @@ class Receiver:
             intensity = 100
 
         if "v1_VestBack"in _addr:
-            bHaptics_back[idx] = {"index": idx, "intensity": intensity}
+            haptics_player.set(BhapticsPosition.VestBack, idx, intensity)
             if show_log:
                 print(Flag.Info.value + "Position: VestBack idx: {} Value: {} \033".format(idx, _args[0]))
         elif "v1_VestFront" in _addr:
-            bHaptics_front[idx] = {"index": idx, "intensity": intensity}
+            haptics_player.set(BhapticsPosition.VestFront, idx, intensity)
             if show_log:
                 print(Flag.Info.value + "Position: VestFront idx: {} Value: {} \033".format(idx, _args[0]))
 
@@ -329,10 +368,7 @@ class Receiver:
         idx = int("".join(num)) - 1
         idx = 5 - idx   # reverse index
 
-        if _args[0]:
-            bHaptics_head[idx] = {"index": idx, "intensity": 100}
-        else:
-            bHaptics_head[idx] = {"index": idx, "intensity": 0}
+        haptics_player.set(BhapticsPosition.Head, idx, _args[0])
 
         if show_log:
             print(Flag.Info.value + "Position: Head idx: {} Value: {} \033".format(idx, _args[0]))
@@ -354,7 +390,7 @@ class Receiver:
         if _args[0] != 0:
             intensity = 100
 
-        bHaptics_head[idx] = {"index": idx, "intensity": intensity}
+        haptics_player.set(BhapticsPosition.Head, idx, intensity)
 
         if show_log:
             print(Flag.Info.value + "Position: Head idx: {} Value: {} \033".format(idx, _args[0]))
@@ -373,17 +409,13 @@ class Receiver:
         idx = int("".join(num)) - 1
 
         if "bHapticsOSC_Arm_Left" in _addr:
-            if _args[0]:
-                bHaptics_foreArm_L[idx] = {"index": idx, "intensity": 100}
-            else:
-                bHaptics_foreArm_L[idx] = {"index": idx, "intensity": 0}
+            haptics_player.set(BhapticsPosition.ForearmL, idx, _args[0])
+
             if show_log:
                 print(Flag.Info.value + "Position: ForearmL idx: {} Value: {} \033".format(idx, _args[0]))
         elif "bHapticsOSC_Arm_Right" in _addr:
-            if _args[0]:
-                bHaptics_foreArm_R[idx] = {"index": idx, "intensity": 100}
-            else:
-                bHaptics_foreArm_R[idx] = {"index": idx, "intensity": 0}
+            haptics_player.set(BhapticsPosition.ForearmR, idx, _args[0])
+
             if show_log:
                 print(Flag.Info.value + "Position: ForearmR idx: {} Value: {} \033".format(idx, _args[0]))
 
@@ -405,11 +437,11 @@ class Receiver:
             intensity = 100
 
         if "v1_ForearemL" in _addr:
-            bHaptics_foreArm_L[idx] = {"index": idx, "intensity": intensity}
+            haptics_player.set(BhapticsPosition.ForearmL, idx, intensity)
             if show_log:
                 print(Flag.Info.value + "Position: ForearmL: {} Value: {} \033".format(idx, _args[0]))
         elif "v1_ForearemR" in _addr:
-            bHaptics_foreArm_R[idx] = {"index": idx, "intensity": intensity}
+            haptics_player.set(BhapticsPosition.ForearmR, idx, intensity)
             if show_log:
                 print(Flag.Info.value + "Position: ForearmR: {} Value: {} \033".format(idx, _args[0]))
 
@@ -427,17 +459,13 @@ class Receiver:
         idx = int("".join(num)) - 1
 
         if "bHapticsOSC_Hand_Left" in _addr:
-            if _args[0]:
-                bHaptics_hand_L[idx] = {"index": idx, "intensity": 100}
-            else:
-                bHaptics_hand_L[idx] = {"index": idx, "intensity": 0}
+            haptics_player.set(BhapticsPosition.HandL, idx, _args[0])
+
             if show_log:
                 print(Flag.Info.value + "Position: HandL idx: {} Value: {} \033".format(idx, _args[0]))
         elif "bHapticsOSC_Hand_Right" in _addr:
-            if _args[0]:
-                bHaptics_hand_R[idx] = {"index": idx, "intensity": 100}
-            else:
-                bHaptics_hand_R[idx] = {"index": idx, "intensity": 0}
+            haptics_player.set(BhapticsPosition.HandR, idx, _args[0])
+
             if show_log:
                 print(Flag.Info.value + "Position: HandR idx: {} Value: {} \033".format(idx, _args[0]))
 
@@ -455,19 +483,14 @@ class Receiver:
         idx = int("".join(num)) - 1
 
         if "bHapticsOSC_Foot_Left" in _addr:
-            if _args[0]:
-                bHaptics_foot_L[idx] = {"index": idx, "intensity": 100}
-            else:
-                bHaptics_foot_L[idx] = {"index": idx, "intensity": 0}
+            haptics_player.set(BhapticsPosition.FootL, idx, _args[0])
             if show_log:
                 print(Flag.Info.value + "Position: FootL idx: {} Value: {} \033".format(idx, _args[0]))
         elif "bHapticsOSC_Foot_Right" in _addr:
             idx = 2 - idx   # reverse index
 
-            if _args[0]:
-                bHaptics_foot_R[idx] = {"index": idx, "intensity": 100}
-            else:
-                bHaptics_foot_R[idx] = {"index": idx, "intensity": 0}
+            haptics_player.set(BhapticsPosition.FootR, idx, _args[0])
+
             if show_log:
                 print(Flag.Info.value + "Position: HandR idx: {} Value: {} \033".format(idx, _args[0]))
 
@@ -485,17 +508,13 @@ class Receiver:
         idx = int("".join(num)) - 1
 
         if "bHapticsOSC_GloveL" in _addr:
-            if _args[0]:
-                bHaptics_glove_L[idx] = {"index": idx, "intensity": 100}
-            else:
-                bHaptics_glove_L[idx] = {"index": idx, "intensity": 0}
+            haptics_player.set(BhapticsPosition.GloveL, idx, _args[0])
+
             if show_log:
                 print(Flag.Info.value + "Position: GloveR idx: {} Value: {} \033".format(idx, _args[0]))
         elif "bHapticsOSC_GloveR" in _addr:
-            if _args[0]:
-                bHaptics_glove_R[idx] = {"index": idx, "intensity": 100}
-            else:
-                bHaptics_glove_R[idx] = {"index": idx, "intensity": 0}
+            haptics_player.set(BhapticsPosition.GloveR, idx, _args[0])
+
             if show_log:
                 print(Flag.Info.value + "Position: GloveR idx: {} Value: {} \033".format(idx, _args[0]))
 
@@ -511,28 +530,7 @@ class Receiver:
         """
 
         if _args[0]:
-            for obj in bHaptics_front:
-                obj["intensity"] = 0
-            for obj in bHaptics_back:
-                obj["intensity"] = 0
-            for obj in bHaptics_head:
-                obj["intensity"] = 0
-            for obj in bHaptics_foreArm_L:
-                obj["intensity"] = 0
-            for obj in bHaptics_foreArm_R:
-                obj["intensity"] = 0
-            for obj in bHaptics_hand_L:
-                obj["intensity"] = 0
-            for obj in bHaptics_hand_R:
-                obj["intensity"] = 0
-            for obj in bHaptics_foot_L:
-                obj["intensity"] = 0
-            for obj in bHaptics_foot_R:
-                obj["intensity"] = 0
-            for obj in bHaptics_glove_L:
-                obj["intensity"] = 0
-            for obj in bHaptics_glove_R:
-                obj["intensity"] = 0
+            haptics_player.reset()
 
     @staticmethod
     def build_dispatcher():
@@ -623,17 +621,9 @@ async def loop():
     print(Flag.Info.value + "START SENDING")
 
     while(True):
-        player.submit_dot("backFrame",BhapticsPosition.VestBack.value,bHaptics_back,100)
-        player.submit_dot("frontFrame", BhapticsPosition.VestFront.value,bHaptics_front, 100)
-        player.submit_dot("headFrame", BhapticsPosition.Head.value,bHaptics_head, 100)
-        player.submit_dot("forearmLFrame", BhapticsPosition.ForearmL.value, bHaptics_foreArm_L, 100)
-        player.submit_dot("forearmRFrame", BhapticsPosition.ForearmR.value, bHaptics_foreArm_R, 100)
-        player.submit_dot("handLFrame", BhapticsPosition.HandL.value, bHaptics_hand_L, 100)
-        player.submit_dot("handRFrame", BhapticsPosition.HandR.value, bHaptics_hand_R, 100)
-        player.submit_dot("footLFrame", BhapticsPosition.FootL.value, bHaptics_foot_L, 100)
-        player.submit_dot("footRFrame", BhapticsPosition.FootR.value, bHaptics_foot_R, 100)
-        player.submit_dot("gloveLFrame", BhapticsPosition.GloveL.value, bHaptics_glove_L, 100)
-        player.submit_dot("gloveRFrame", BhapticsPosition.GloveR.value, bHaptics_glove_R, 100)
+        for pos in BhapticsPosition:
+            haptics_player.sumit_dot(pos)
+
         await asyncio.sleep(0.1)
 
 async def main():
@@ -648,23 +638,12 @@ async def main():
 if __name__ == '__main__':
     app_id = "per.Guideung.bHapticsOSCQ"
     app_name = "bHapticsOSCQ"
-    oscq = OSCQuery()
-    config = Config()
     show_log: bool = True
 
-    player.initialize(app_id,app_name)
+    config = Config()
 
-    bHaptics_front = [{"index": i, "intensity": 0} for i in range(20)]
-    bHaptics_back = [{"index": i, "intensity": 0} for i in range(20)]
-    bHaptics_head = [{"index": i, "intensity": 0} for i in range(6)]
-    bHaptics_foreArm_L = [{"index": i, "intensity": 0} for i in range(6)]
-    bHaptics_foreArm_R = [{"index": i, "intensity": 0} for i in range(6)]
-    bHaptics_hand_L = [{"index": i, "intensity": 0} for i in range(3)]
-    bHaptics_hand_R = [{"index": i, "intensity": 0} for i in range(3)]
-    bHaptics_foot_L = [{"index": i, "intensity": 0} for i in range(3)]
-    bHaptics_foot_R = [{"index": i, "intensity": 0} for i in range(3)]
-    bHaptics_glove_L=[{"index": i, "intensity": 0} for i in range(6)]
-    bHaptics_glove_R=[{"index": i, "intensity": 0} for i in range(6)]
+    haptics_player = HapticsPlayer(app_id, app_name)
+    oscq = OSCQuery()
 
     try:
         asyncio.run(main())
