@@ -39,7 +39,8 @@ class WebSocketReceiver(WebSocket):
         except:
             # active_keys = set([])
             # connected_positions = set([])
-            print('')
+            # print('')
+            pass
 
         return frame
 
@@ -138,7 +139,7 @@ def submit_registered_with_option(
         }]
     }
 
-    json_str = json.dumps(request);
+    json_str = json.dumps(request)
 
     __submit(json_str)
 
@@ -152,7 +153,7 @@ def submit(key, frame):
         }]
     }
 
-    json_str = json.dumps(request);
+    json_str = json.dumps(request)
 
     __submit(json_str)
 
