@@ -1,5 +1,4 @@
 import os
-import re
 import asyncio
 import json
 import errno
@@ -15,6 +14,7 @@ from tinyoscquery.query import OSCQueryBrowser, OSCQueryClient
 from tinyoscquery.queryservice import OSCQueryService, OSCAccess
 from bhaptics.better_haptic_player import BhapticsPosition, connected_positions
 from haptics_player import HapticsPlayer
+from haptics_handler import HapticsHandler
 
 DEFAULT_DURATION = 100
 INTENSITY = 100
@@ -269,230 +269,6 @@ class AvatarConfig:
 
 class Receiver:
     @staticmethod
-    def vest_handler(_addr, *_args):
-        """
-        (STATIC) This works with dispatcher.
-
-        send feedback to vest when receive contact
-        :param _addr: VRC parameter address
-        :param _args: VRC parameter value
-        :return: NONE
-        """
-        num = re.findall(r'\d', _addr)
-        idx = int("".join(num)) - 1
-
-        if "bHapticsOSC_Vest_Back"in _addr:
-            haptics_player.set(BhapticsPosition.VestBack, idx ,_args[0])
-
-            if show_log:
-                print(Flag.Info.value + "Position: VestBack idx: {} Value: {}".format(idx, _args[0]))
-        elif "bHapticsOSC_Vest_Front" in _addr:
-            idx = (3 - idx % 4) + (idx // 4 * 4)
-
-            haptics_player.set(BhapticsPosition.VestFront, idx, _args[0])
-
-            if show_log:
-                print(Flag.Info.value + "Position: VestFront idx: {} Value: {}".format(idx, _args[0]))
-
-    @staticmethod
-    def v1_vest_handler(_addr, *_args):
-        """
-        (STATIC)(Legacy) This works with dispatcher.
-
-        send feedback to vest when receive contact
-        :param _addr: VRC parameter address
-        :param _args: VRC parameter value
-        :return: NONE
-        """
-        num = _addr.split("_")[-1]
-        idx = int("".join(num))
-        intensity = INTENSITY if _args[0] else 0
-
-        if "v1_VestBack"in _addr:
-            haptics_player.set(BhapticsPosition.VestBack, idx, intensity)
-            if show_log:
-                print(Flag.Info.value + "Position: VestBack idx: {} Value: {}".format(idx, _args[0]))
-        elif "v1_VestFront" in _addr:
-            haptics_player.set(BhapticsPosition.VestFront, idx, intensity)
-            if show_log:
-                print(Flag.Info.value + "Position: VestFront idx: {} Value: {}".format(idx, _args[0]))
-
-    @staticmethod
-    def head_handler(_addr, *_args):
-        """
-        (STATIC) This works with dispatcher.
-
-        send feedback to head when receive contact
-        :param _addr: VRC parameter address
-        :param _args: VRC parameter value
-        :return: NONE
-        """
-        num = re.findall(r'\d', _addr)
-        idx = int("".join(num)) - 1
-        idx = 5 - idx   # reverse index
-
-        haptics_player.set(BhapticsPosition.Head, idx, _args[0])
-
-        if show_log:
-            print(Flag.Info.value + "Position: Head idx: {} Value: {}".format(idx, _args[0]))
-
-    @staticmethod
-    def v1_head_handler(_addr, *_args):
-        """
-        (STATIC) (Legacy) This works with dispatcher.
-        send feedback to head when receive contact
-
-        :param _addr: VRC parameter address
-        :param _args: VRC parameter value
-        :return: NONE
-        """
-        num = _addr.split("_")[-1]
-        idx = int("".join(num))
-        intensity = INTENSITY if _args[0] else 0
-
-        haptics_player.set(BhapticsPosition.Head, idx, intensity)
-
-        if show_log:
-            print(Flag.Info.value + "Position: Head idx: {} Value: {}".format(idx, _args[0]))
-
-    @staticmethod
-    def arm_handler(_addr, *_args):
-        """
-        (STATIC) This works with dispatcher.
-
-        send feedback to arms when receive contact
-        :param _addr: VRC parameter address
-        :param _args: VRC parameter value
-        :return: NONE
-        """
-        num = re.findall(r'\d', _addr)
-        idx = int("".join(num)) - 1
-
-        if "bHapticsOSC_Arm_Left" in _addr:
-            haptics_player.set(BhapticsPosition.ForearmL, idx, _args[0])
-
-            if show_log:
-                print(Flag.Info.value + "Position: ForearmL idx: {} Value: {}".format(idx, _args[0]))
-        elif "bHapticsOSC_Arm_Right" in _addr:
-            haptics_player.set(BhapticsPosition.ForearmR, idx, _args[0])
-
-            if show_log:
-                print(Flag.Info.value + "Position: ForearmR idx: {} Value: {}".format(idx, _args[0]))
-
-    @staticmethod
-    def v1_arm_handler(_addr, *_args):
-        """
-        (STATIC) This works with dispatcher.
-
-        send feedback to arms when receive contact
-        :param _addr: VRC parameter address
-        :param _args: VRC parameter value
-        :return: NONE
-        """
-        num = _addr.split("_")[-1]
-        idx = int("".join(num))
-        intensity = INTENSITY if _args[0] else 0
-
-        if "v1_ForearemL" in _addr:
-            haptics_player.set(BhapticsPosition.ForearmL, idx, intensity)
-
-            if show_log:
-                print(Flag.Info.value + "Position: ForearmL: {} Value: {}".format(idx, _args[0]))
-        elif "v1_ForearemR" in _addr:
-            haptics_player.set(BhapticsPosition.ForearmR, idx, intensity)
-
-            if show_log:
-                print(Flag.Info.value + "Position: ForearmR: {} Value: {}".format(idx, _args[0]))
-
-    @staticmethod
-    def hand_handler(_addr, *_args):
-        """
-        (STATIC) This works with dispatcher.
-
-        send feedback to hands when receive contact
-        :param _addr: VRC parameter address
-        :param _args: VRC parameter value
-        :return: NONE
-        """
-        num = re.findall(r'\d', _addr)
-        idx = int("".join(num)) - 1
-
-        if "bHapticsOSC_Hand_Left" in _addr:
-            haptics_player.set(BhapticsPosition.HandL, idx, _args[0])
-
-            if show_log:
-                print(Flag.Info.value + "Position: HandL idx: {} Value: {}".format(idx, _args[0]))
-        elif "bHapticsOSC_Hand_Right" in _addr:
-            haptics_player.set(BhapticsPosition.HandR, idx, _args[0])
-
-            if show_log:
-                print(Flag.Info.value + "Position: HandR idx: {} Value: {}".format(idx, _args[0]))
-
-    @staticmethod
-    def foot_handler(_addr, *_args):
-        """
-        (STATIC) This works with dispatcher.
-
-        send feedback to feet when receive contact
-        :param _addr: VRC parameter address
-        :param _args: VRC parameter value
-        :return: NONE
-        """
-        num = re.findall(r'\d', _addr)
-        idx = int("".join(num)) - 1
-
-        if "bHapticsOSC_Foot_Left" in _addr:
-            haptics_player.set(BhapticsPosition.FootL, idx, _args[0])
-
-            if show_log:
-                print(Flag.Info.value + "Position: FootL idx: {} Value: {}".format(idx, _args[0]))
-        elif "bHapticsOSC_Foot_Right" in _addr:
-            idx = 2 - idx   # reverse index
-
-            haptics_player.set(BhapticsPosition.FootR, idx, _args[0])
-
-            if show_log:
-                print(Flag.Info.value + "Position: HandR idx: {} Value: {}".format(idx, _args[0]))
-
-    @staticmethod
-    def glove_handler(_addr, *_args):
-        """
-        (STATIC) This works with dispatcher.
-
-        send feedback to glove when receive contact
-        :param _addr: VRC parameter address
-        :param _args: VRC parameter value
-        :return: NONE
-        """
-        num = re.findall(r'\d', _addr)
-        idx = int("".join(num)) - 1
-
-        if "bHapticsOSC_GloveL" in _addr:
-            haptics_player.set(BhapticsPosition.GloveL, idx, _args[0])
-
-            if show_log:
-                print(Flag.Info.value + "Position: GloveR idx: {} Value: {} \033".format(idx, _args[0]))
-        elif "bHapticsOSC_GloveR" in _addr:
-            haptics_player.set(BhapticsPosition.GloveR, idx, _args[0])
-
-            if show_log:
-                print(Flag.Info.value + "Position: GloveR idx: {} Value: {} \033".format(idx, _args[0]))
-
-    @staticmethod
-    def reset_handler(_addr, *_args):
-        """
-            (STATIC) This works with dispatcher.
-
-            reset all position to zero
-            :param _addr: VRC parameter address
-            :param _args: VRC parameter value
-            :return: NONE
-        """
-
-        if _args[0]:
-            haptics_player.reset()
-
-    @staticmethod
     def build_dispatcher():
         """
         (STATIC) build dispatcher for receiver
@@ -501,19 +277,22 @@ class Receiver:
         """
         d = dispatcher.Dispatcher()
 
-        d.map("/avatar/parameters/bHapticsOSC_reset", Receiver.reset_handler)
-        d.map("/avatar/parameters/bHapticsOSC_Head*", Receiver.head_handler)
-        d.map("/avatar/parameters/bHapticsOSC_Arm*", Receiver.arm_handler)
-        d.map("/avatar/parameters/bHapticsOSC_Hand*", Receiver.arm_handler)
-        d.map("/avatar/parameters/bHapticsOSC_Hand*", Receiver.hand_handler)
-        d.map("/avatar/parameters/bHapticsOSC_Foot*", Receiver.foot_handler)
-        d.map("/avatar/parameters/bHapticsOSC_Glove*",Receiver.glove_handler)
-        d.map("/avatar/parameters/bHapticsOSC_Vest*", Receiver.vest_handler)
+        handler = HapticsHandler(haptics_player)
+
+        d.map("/avatar/change", handler.avi_changed_handler)
+        d.map("/avatar/parameters/bHapticsOSC_reset", handler.reset_handler)
+
+        d.map("/avatar/parameters/bHapticsOSC_Head*", handler.head_handler)
+        d.map("/avatar/parameters/bHapticsOSC_Arm*", handler.arm_handler)
+        d.map("/avatar/parameters/bHapticsOSC_Hand*", handler.hand_handler)
+        d.map("/avatar/parameters/bHapticsOSC_Foot*", handler.foot_handler)
+        d.map("/avatar/parameters/bHapticsOSC_Glove*",handler.glove_handler)
+        d.map("/avatar/parameters/bHapticsOSC_Vest*", handler.vest_handler)
 
         # <V1 Parameters>
-        d.map("/avatar/parameters/bOSC_v1_Vest*", Receiver.v1_vest_handler)
-        d.map("/avatar/parameters/bOSC_v1_Head*", Receiver.v1_head_handler)
-        d.map("/avatar/parameters/bOSC_v1_Forearm*", Receiver.v1_arm_handler)
+        d.map("/avatar/parameters/bOSC_v1_Vest*", handler.v1_vest_handler)
+        d.map("/avatar/parameters/bOSC_v1_Head*", handler.v1_head_handler)
+        d.map("/avatar/parameters/bOSC_v1_Forearm*", handler.v1_arm_handler)
         #</V1 Parameters>
 
         return d
