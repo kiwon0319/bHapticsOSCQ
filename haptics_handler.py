@@ -216,7 +216,7 @@ class HapticsHandler:
                 print(Flag.Info.value + "Position: GloveR idx: {} Value: {} \033".format(idx, _args[0]))
 
     def avi_changed_handler(self, _addr, *_args):
-        self. reset_handler(_addr, *_args)
+        self.haptics_player.reset()
 
     def reset_handler(self, _addr, *_args):
         """
